@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Decoding the Software Backbone — NiG's Times</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f2ede2; --paper2:#ece5d6; --ink:#1c1712; --ink-soft:#4a423a;
+    --rule:#1c1712; --accent:#7a1f2a; --accent-soft:#a9483f; --hair:#c9bfa8;
+    --tag-bg:#7a1f2a; --tag-ink:#f2ede2;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+    box-sizing:border-box;
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  *{box-sizing:border-box;}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#171310; --paper2:#1e1a15; --ink:#ece5d6; --ink-soft:#c9bfa8;
+      --rule:#ece5d6; --accent:#d9736a; --accent-soft:#c9564c; --hair:#3a3227;
+      --tag-bg:#d9736a; --tag-ink:#171310;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#171310; --paper2:#1e1a15; --ink:#ece5d6; --ink-soft:#c9bfa8;
+    --rule:#ece5d6; --accent:#d9736a; --accent-soft:#c9564c; --hair:#3a3227;
+    --tag-bg:#d9736a; --tag-ink:#171310;
+  }
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    transition: background .4s ease, color .4s ease;
+    min-height:100%;
+  }
+  .grain{position:fixed; inset:0; pointer-events:none; opacity:.035; z-index:1;
+    background-image: radial-gradient(var(--ink) 0.6px, transparent 0.6px);
+    background-size: 3px 3px;}
+  .wrap{max-width:760px; margin:0 auto; padding:0 20px 80px; position:relative; z-index:2;}
+
+  .topbar{display:flex; justify-content:space-between; align-items:center;
+    padding:18px 0 14px; border-bottom:1px solid var(--hair); font-size:.72rem;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft);}
+  .topbar .dot{color:var(--accent); font-size:1rem; margin-right:6px;}
+  .theme-btn{font-family:inherit; font-size:.72rem; letter-spacing:.1em;
+    background:none; border:1px solid var(--hair); color:var(--ink);
+    padding:6px 12px; border-radius:20px; cursor:pointer; text-transform:uppercase;
+    transition:background .3s, color .3s, border-color .3s;}
+  .theme-btn:hover{border-color:var(--accent);}
+  .theme-btn:focus-visible, a:focus-visible, .theme-btn:focus{outline:2px solid var(--accent); outline-offset:2px;}
+
+  .kicker{text-align:center; padding-top:28px; font-size:.72rem; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--ink-soft);}
+  .kicker-rule{display:flex; align-items:center; justify-content:center; gap:16px; margin-top:6px;}
+  .kicker-rule span{flex:0 0 auto;}
+  .kicker-rule .line{flex:1; max-width:60px; height:1px; background:var(--hair);}
+  .est{text-align:center; font-size:.8rem; letter-spacing:.1em; color:var(--ink-soft); margin-top:18px;}
+
+  /* Masthead is a div (not h1) so the article headline is the page's only h1 */
+  .masthead{
+    text-align:center; font-family: 'Playfair Display', Georgia, serif;
+    font-weight:900; font-size:clamp(3rem, 13vw, 5.2rem);
+    margin:14px 0 6px; letter-spacing:-0.01em; line-height:1;
+    opacity:0; transform:translateY(14px);
+    animation: riseIn .8s cubic-bezier(.2,.8,.2,1) .15s forwards;
+  }
+  .masthead .dot{color:var(--accent);}
+  .tagline{text-align:center; font-size:.95rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-soft); margin-bottom:26px;}
+
+  .double-rule{height:3px; background:var(--rule); position:relative; margin-bottom:8px;}
+  .double-rule::after{content:''; position:absolute; left:35%; right:35%; bottom:-8px; height:2px; background:var(--accent);}
+
+  .subhead{text-align:center; font-size:.85rem; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-soft); padding:22px 0 14px; line-height:1.7;}
+  .diamond{text-align:center; color:var(--accent); font-size:.8rem; margin-bottom:14px;}
+
+  .meta-line{display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;
+    border-top:1px solid var(--hair); padding:14px 0; font-size:.92rem; font-weight:bold;}
+  .meta-line.sub{font-weight:normal; font-size:.88rem; color:var(--ink-soft);}
+  .free{color:var(--accent); font-weight:bold; padding:2px 0 14px;}
+
+  .thick-rule{height:2px; background:var(--rule); margin-top:6px;}
+  .desk-row{display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+    padding:12px 0; font-size:.78rem; letter-spacing:.08em; text-transform:uppercase;
+    border-bottom:1px solid var(--hair); color:var(--ink-soft);}
+  .desk-row .diam{color:var(--accent); margin-left:4px;}
+
+  .badge{display:inline-flex; align-items:center; gap:8px; background:var(--tag-bg); color:var(--tag-ink);
+    font-size:.75rem; letter-spacing:.14em; text-transform:uppercase; font-weight:bold;
+    padding:10px 18px; margin:26px 0 20px;}
+  .badge .dot{font-size:1rem; line-height:0;}
+
+  h1.headline{font-family:'Playfair Display', Georgia, serif; font-weight:900;
+    font-size:clamp(2.1rem, 7vw, 3.2rem); line-height:1.08; margin:0 0 18px;
+    opacity:0; transform:translateY(10px);
+    animation: riseIn .7s cubic-bezier(.2,.8,.2,1) .4s forwards;}
+
+  .byline{font-size:1rem; margin-bottom:26px;}
+  .byline b{font-weight:bold;}
+  .byline .role{color:var(--ink-soft); font-weight:normal;}
+  .rule-thin{height:1px; background:var(--rule); margin-bottom:30px;}
+
+  article{font-size:1.08rem; line-height:1.75; color:var(--ink); max-width:66ch; margin:0 auto;}
+  article p{margin:0 0 22px;}
+  article p:first-of-type::first-letter{
+    font-family:'Playfair Display', Georgia, serif; font-weight:900; font-size:3.6rem;
+    float:left; line-height:.8; padding:6px 8px 0 0; color:var(--accent);
+  }
+  article h2{font-family:'Playfair Display', Georgia, serif; font-size:1.5rem;
+    margin:38px 0 16px; padding-bottom:8px; border-bottom:2px solid var(--accent);
+    display:inline-block;}
+  article ul{margin:0 0 22px; padding-left:1.3em;}
+  article li{margin-bottom:12px;}
+  article code, article pre{font-family:'Courier New', monospace;}
+  .codeblock{background:var(--paper2); border-left:3px solid var(--accent); padding:16px 18px;
+    font-family:'Courier New', monospace; font-size:.86rem; line-height:1.6; overflow-x:auto;
+    margin:0 0 26px; white-space:pre;}
+  article blockquote{margin:0 0 26px; padding:4px 0 4px 20px; border-left:3px solid var(--accent);
+    font-style:italic; color:var(--ink-soft);}
+  .pull{font-family:'Playfair Display', Georgia, serif; font-style:italic; font-size:1.3rem;
+    text-align:center; color:var(--accent-soft); margin:34px 0; line-height:1.5;}
+  .next-step{background:var(--paper2); border-left:3px solid var(--accent); padding:16px 18px; margin:0 0 26px;}
+  .next-step b{color:var(--accent);}
+
+  .filed{text-align:center; font-size:.82rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-soft); margin-top:44px; padding-top:24px; border-top:1px solid var(--hair);}
+  .byline-foot{text-align:center; font-size:.9rem; color:var(--ink-soft); margin-top:10px; font-style:italic;}
+
+  @keyframes riseIn{to{opacity:1; transform:translateY(0);}}
+  @media (prefers-reduced-motion: reduce){
+    .masthead, h1.headline{animation:none; opacity:1; transform:none;}
+  }
+  @media (max-width:480px){
+    .meta-line, .desk-row{font-size:.72rem;}
+    article{font-size:1.02rem;}
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="wrap">
+
+  <div class="topbar">
+    <span><span class="dot">●</span>Digital Edition</span>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">◐ Dark</button>
+  </div>
+
+  <div class="kicker">
+    <div class="kicker-rule"><span class="line"></span><span>Truth · Integrity · Technology</span><span class="line"></span></div>
+  </div>
+  <div class="est">Digital Edition · Est. 2026</div>
+
+  <div class="masthead" role="img" aria-label="NiG's Times">NiG<span class="dot">'</span>s Times</div>
+  <div class="tagline">The Digital Newspaper for Ideas That Matter</div>
+
+  <div class="double-rule"></div>
+  <div class="subhead">What to Build · Why It Matters · Whether It Works</div>
+  <div class="diamond">◆</div>
+
+  <div class="meta-line">
+    <span>Vol. I · No. 29</span>
+    <span id="dateline">Wednesday · September 30 · 2026</span>
+  </div>
+  <div class="meta-line sub"><span>New Delhi Edition</span></div>
+
+  <div class="desk-row">
+    <span>Careers &amp; Technology Desk</span>
+    <span>Special Editorial Report</span>
+  </div>
+  <div class="free">Free Digital Edition</div>
+  <div class="thick-rule"></div>
+
+  <div class="desk-row">
+    <span>QA Engineering <span class="diam">◆</span></span>
+    <span>Software Quality <span class="diam">◆</span></span>
+  </div>
+
+  <div class="badge"><span class="dot">●</span> Editorial Column</div>
+
+  <h1 class="headline">The Backbone of Modern QA:<br>GitHub and Jenkins</h1>
+  <div class="byline"><b>By Nishant Gaurav</b> <span class="role">· Senior QA Engineer</span></div>
+  <div class="rule-thin"></div>
+
+  <article>
+    <p>There's a quiet myth in QA circles that testing is about test cases and bug reports. It isn't — not anymore. Modern QA is a pipeline discipline, and in many shops two tools sit at the center of that pipeline: GitHub and Jenkins. If you've spent any real time in automation, you already know this. If you're newer to the craft, here's why they're not nice-to-haves — they're the backbone your entire testing practice hangs on.</p>
+
+    <h2>GitHub: Where Your Test Suite Actually Lives</h2>
+    <p>Early in a QA career, it's tempting to think of test scripts as disposable — write it, run it, move on. That mindset breaks the moment you're working on a team, or the moment your suite grows past a few dozen tests.</p>
+    <p>GitHub solves three problems at once:</p>
+    <ul>
+      <li><b>History you can trust.</b> Every change to a Playwright spec or a Postman collection is tracked. When a test suddenly starts failing, you can trace exactly what changed and when — no guessing.</li>
+      <li><b>Collaboration without chaos.</b> Branches let you build a new suite without breaking the one running in CI right now. Pull requests force a second pair of eyes on test logic before it merges — because bad test code is just as dangerous as bad production code; it either misses real bugs or cries wolf on fake ones.</li>
+      <li><b>A living record of intent.</b> README files, test plans, and issue threads sit right next to the code, so the why behind a test doesn't get lost when someone leaves the team.</li>
+    </ul>
+    <p>There's a subtler point too: GitHub is increasingly not just storage. GitHub Actions can trigger test runs directly on push or PR, which means the line between version control and CI is blurring. Many teams run Jenkins alongside Actions, and plenty have moved to Actions entirely — but for a QA engineer, that overlap is opportunity, not confusion. Triggers, stages, and status checks work the same way on either side, so the skill transfers.</p>
+
+    <h2>Jenkins: The Automation That Never Forgets to Run Your Tests</h2>
+    <p>If GitHub is where the tests live, Jenkins is what orchestrates their runs — reliably, repeatedly, without anyone remembering to click a button.</p>
+    <p>Picture the alternative for a moment. A release is cut on a Thursday afternoon. The regression suite passed locally two weeks ago. Nobody is quite sure whether the API tests were re-run after the last schema change. Someone says, "I think we're fine." That sentence is the sound of a team without CI.</p>
+    <p>Jenkins exists to make that sentence impossible:</p>
+    <ul>
+      <li><b>Automatic triggering</b> — on every commit, every PR, every schedule. No more "did anyone run the regression suite before this release?"</li>
+      <li><b>Full pipeline orchestration</b> — build the app, deploy to a test environment, run unit, API, and UI tests in sequence, and report results, all in one automated flow.</li>
+      <li><b>Quality gatekeeping</b> — Jenkins reports every build back to the pull request as a status check. When your repository's branch protection requires that check, a failing suite blocks the merge outright. This is the mechanical enforcement of "shift-left" QA: bugs get caught before they reach production, not after.</li>
+      <li><b>Visibility over time</b> — dashboards and build history expose flaky tests and creeping regressions that would otherwise hide in plain sight. The build log from three weeks ago is the closest thing QA has to institutional memory.</li>
+    </ul>
+
+    <h2>The Loop That Makes CI/CD Real</h2>
+    <p>Put together, the daily rhythm looks like this:</p>
+    <div class="codeblock">Push to GitHub &rarr; Webhook fires &rarr; Jenkins pulls latest code
+&rarr; Build &amp; deploy to test env &rarr; Run Playwright/Postman/API suites
+&rarr; Publish results as a PR status check
+&rarr; Branch protection blocks the merge if the check is red</div>
+    <p>This loop is the actual mechanism behind buzzwords like "continuous testing" and "quality gates." It's not philosophy — it's a webhook, a pipeline script, and one branch protection rule.</p>
+
+    <h2>One Without the Other</h2>
+    <p>The "backbone" claim only holds if both halves are present, and it's worth naming what happens when one goes missing:</p>
+    <ul>
+      <li>GitHub without Jenkins (or any CI) produces tests that exist but rarely run. The suite rots quietly. Coverage numbers look fine on paper while production tells a different story.</li>
+      <li>Jenkins without GitHub (or any Git host) produces pipelines that run stale code, or code nobody can trace back to a change. Builds go green on the wrong branch and nobody notices until a release ships broken.</li>
+    </ul>
+    <p class="pull">"Version control without automation is a library with no readers. Automation without version control is an engine with no logbook."</p>
+
+    <h2>Why This Matters for Your Growth as a QA Engineer</h2>
+    <p>There's a real skill split hiding here, and it's worth naming directly:</p>
+    <ul>
+      <li><b>Git competence</b> — branching strategy, resolving conflicts in test files, writing PRs that reviewers can actually reason about.</li>
+      <li><b>Jenkins pipeline literacy</b> — reading and writing a Jenkinsfile, understanding stages and triggers, debugging why a build went red at 2 a.m.</li>
+    </ul>
+    <p>Writing a solid Playwright test is half the job. Engineers who can also own the pipeline — who understand why a build failed three stages before the test step even ran — are the ones trusted to own quality, not just check it.</p>
+
+    <div class="next-step"><b>Your next step:</b> this week, write a three-stage Jenkinsfile — checkout, run your Playwright suite, publish results — on a practice repo, and wire it to a required PR status check. Nothing teaches pipeline literacy faster than watching your own build go red.</div>
+
+    <div class="filed">Filed under: Automation &amp; Pipelines — NiG's Times</div>
+    <div class="byline-foot">Nishant Gaurav is a Senior QA Engineer writing on automation, pipelines, and the craft of quality engineering for NiG's Times.</div>
+  </article>
+
+</div>
+
+<script>
+  const btn = document.getElementById('themeBtn');
+  const root = document.documentElement;
+
+  // Keep the dateline current instead of hard-coded
+  (function setDateline(){
+    try {
+      const d = new Date();
+      const wd = d.toLocaleDateString('en-US', {weekday:'long'});
+      const mo = d.toLocaleDateString('en-US', {month:'long'});
+      document.getElementById('dateline').textContent =
+        wd + ' · ' + mo + ' ' + d.getDate() + ' · ' + d.getFullYear();
+    } catch(e){}
+  })();
+
+  function applyLabel(){
+    const isDark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    btn.textContent = isDark ? '☀ Light' : '◐ Dark';
+  }
+  btn.addEventListener('click', () => {
+    const current = root.getAttribute('data-theme') ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    root.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+    try { localStorage.setItem('nigs-times-theme', root.getAttribute('data-theme')); } catch(e){}
+    applyLabel();
+  });
+  try {
+    const saved = localStorage.getItem('nigs-times-theme');
+    if (saved) root.setAttribute('data-theme', saved);
+  } catch(e){}
+  applyLabel();
+</script>
+</body>
+</html>
